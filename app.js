@@ -700,8 +700,9 @@ function getImportantTokens(text) {
   const counts = new Map();
 
   tokens.forEach((token) => {
-    if (!stopWords.has(token) && token.length <= 24) {
-      counts.set(token, (counts.get(token) || 0) + 1);
+    const cleanedToken = token.replace(/[.。,:;，；]+$/g, "");
+    if (!stopWords.has(cleanedToken) && cleanedToken.length <= 24) {
+      counts.set(cleanedToken, (counts.get(cleanedToken) || 0) + 1);
     }
   });
 
