@@ -1,5 +1,5 @@
-const STORAGE_KEY = "internpilot.applications.v2";
-const LEGACY_STORAGE_KEY = "internpilot.applications.v1";
+const STORAGE_KEY = "internpilot.applications.v3";
+const PREVIOUS_STORAGE_KEYS = ["internpilot.applications.v2", "internpilot.applications.v1"];
 const STATUSES = ["Wishlist", "Applied", "Interview", "Offer", "Rejected"];
 
 const STATUS_LABELS = {
@@ -222,7 +222,8 @@ function readApplications() {
     }
   }
 
-  const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
+  const legacyKey = PREVIOUS_STORAGE_KEYS.find((key) => localStorage.getItem(key));
+  const legacy = legacyKey ? localStorage.getItem(legacyKey) : "";
   if (legacy) {
     try {
       const parsed = JSON.parse(legacy);
