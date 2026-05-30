@@ -212,18 +212,72 @@ function setView(viewName) {
 }
 
 function readApplications() {
-  const stored = localStorage.getItem(STORAGE_KEY) || localStorage.getItem(LEGACY_STORAGE_KEY);
+  const stored = localStorage.getItem(STORAGE_KEY);
+  if (stored) {
+    try {
+      const parsed = JSON.parse(stored);
+      return Array.isArray(parsed) ? parsed : sampleApplications;
+    } catch {
+      return sampleApplications;
+    }
+  }
+
+  const legacy = localStorage.getItem(LEGACY_STORAGE_KEY);
+  if (legacy) {
+    try {
+      const parsed = JSON.parse(legacy);
+      const migrated = Array.isArray(parsed) ? migrateLegacySamples(parsed) : sampleApplications;
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+      return migrated;
+    } catch {
+      return sampleApplications;
+    }
+  }
+
   if (!stored) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(sampleApplications));
     return sampleApplications;
   }
+}
 
-  try {
-    const parsed = JSON.parse(stored);
-    return Array.isArray(parsed) ? parsed : sampleApplications;
-  } catch {
-    return sampleApplications;
-  }
+function migrateLegacySamples(items) {
+  const translations = {
+    "Monzo|Product Analyst Intern": {
+      role: "产品分析实习生",
+      location: "伦敦",
+      nextAction: "准备 metrics case study",
+      notes: "第二轮面试，重点准备产品分析和增长指标。"
+    },
+    "Figma|Design Engineer Intern": {
+      role: "设计工程实习生",
+      location: "远程",
+      nextAction: "联系校友跟进内推",
+      notes: "申请里已附作品集链接。"
+    },
+    "Wise|Software Engineering Intern": {
+      role: "软件工程实习生",
+      location: "伦敦",
+      nextAction: "根据支付项目经历修改简历",
+      notes: "需要突出后端项目和 API 经验。"
+    },
+    "Spotify|Data Science Intern": {
+      role: "数据科学实习生",
+      location: "斯德哥尔摩",
+      nextAction: "归档笔试经验",
+      notes: "Online assessment 后收到拒信。"
+    },
+    "Canva|Growth Marketing Intern": {
+      role: "增长营销实习生",
+      location: "悉尼 / 远程",
+      nextAction: "比较薪资、签证和入职时间",
+      notes: "Offer 决策截止日期在两周后。"
+    }
+  };
+
+  return items.map((item) => {
+    const translation = translations[`${item.company}|${item.role}`];
+    return translation ? { ...item, ...translation } : item;
+  });
 }
 
 function persist() {
