@@ -53,7 +53,7 @@
           </div>
           <div class="topbar-actions">
             <button class="icon-button" id="seedButton" type="button" title="重置演示数据" aria-label="重置演示数据">↻</button>
-            <button class="secondary-button" id="openJdDialog" type="button">导入 JD</button>
+            <button class="secondary-button" id="openJdDialog" type="button">JD / 简历分析</button>
             <button class="secondary-button" id="exportButton" type="button">导出 CSV</button>
             <button class="primary-button" id="openAddDialog" type="button">新增申请</button>
           </div>
@@ -237,8 +237,8 @@
       <form method="dialog" id="jdForm">
         <div class="dialog-header">
           <div>
-            <p class="eyebrow">JD 导入</p>
-            <h3>从照片或 PDF 读取岗位描述</h3>
+            <p class="eyebrow">投递助手</p>
+            <h3>读取 JD、简历和经历，生成匹配分析</h3>
           </div>
           <button class="icon-button" value="cancel" type="button" id="closeJdDialog" aria-label="关闭">×</button>
         </div>
@@ -249,7 +249,12 @@
             <input id="jdFileInput" type="file" accept="application/pdf,image/*,.txt,.md">
             <small>支持 PDF、截图、照片、TXT 和 Markdown。图片会在浏览器里 OCR，不会上传到服务器。</small>
           </label>
-          <p class="status-line" id="jdStatus">选择文件后开始读取 JD。</p>
+          <label class="file-drop">
+            <span>上传简历或经历文件</span>
+            <input id="resumeFileInput" type="file" accept="application/pdf,image/*,.txt,.md">
+            <small>支持简历 PDF、截图、照片或文字文件。也可以直接在下方粘贴过往经历。</small>
+          </label>
+          <p class="status-line" id="jdStatus">选择文件后开始读取，或直接粘贴 JD 和经历文本。</p>
         </div>
 
         <div class="form-grid">
@@ -271,12 +276,39 @@
           </label>
           <label class="wide">
             <span>读取到的 JD 文本</span>
-            <textarea id="jdText" rows="9" placeholder="文件内容会出现在这里，也可以直接粘贴 JD 文本。"></textarea>
+            <textarea id="jdText" rows="7" placeholder="文件内容会出现在这里，也可以直接粘贴 JD 文本。"></textarea>
+          </label>
+          <label class="wide">
+            <span>简历 / 过往经历</span>
+            <textarea id="resumeText" rows="7" placeholder="上传简历后会自动填充，也可以粘贴项目、课程、实习、社团或技能经历。"></textarea>
+          </label>
+        </div>
+
+        <div class="analysis-panel">
+          <div class="analysis-score">
+            <span>匹配度</span>
+            <strong id="matchScore">尚未分析</strong>
+          </div>
+          <div>
+            <h4>匹配说明</h4>
+            <p id="matchDetails">导入 JD 和简历/经历后，点击“分析匹配度”。</p>
+          </div>
+          <div>
+            <h4>提升建议</h4>
+            <ul id="suggestionsList">
+              <li>先上传或粘贴材料。</li>
+            </ul>
+          </div>
+          <label>
+            <span>投递邮件草稿</span>
+            <textarea id="emailDraft" rows="9" placeholder="分析后会生成一封可编辑的投递邮件。"></textarea>
           </label>
         </div>
 
         <div class="dialog-actions">
           <button class="secondary-button" id="parseJdText" type="button">重新解析文本</button>
+          <button class="secondary-button" id="analyzeFitButton" type="button">分析匹配度</button>
+          <button class="secondary-button" id="copyEmailButton" type="button">复制邮件</button>
           <span></span>
           <button class="secondary-button" id="cancelJdButton" type="button">取消</button>
           <button class="primary-button" id="useJdButton" type="button">应用到申请表</button>
