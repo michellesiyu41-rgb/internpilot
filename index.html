@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-CN">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>InternPilot | Internship Tracker</title>
-    <meta name="description" content="InternPilot is a lightweight internship application tracker for managing deadlines, interviews, priorities, notes, and follow-ups in one focused workspace.">
+    <title>InternPilot | 实习申请管理器</title>
+    <meta name="description" content="InternPilot 是一个轻量级实习申请管理工具，帮助学生管理申请截止日期、面试进度、优先级、备注和 JD。">
     <meta name="theme-color" content="#176c78">
     <link rel="stylesheet" href="styles.css">
   </head>
@@ -19,114 +19,115 @@
           </div>
           <div>
             <p class="eyebrow">InternPilot</p>
-            <h1>Internship tracker</h1>
+            <h1>实习申请管理器</h1>
           </div>
         </div>
 
-        <nav class="nav" aria-label="Primary">
+        <nav class="nav" aria-label="主导航">
           <button class="nav-item active" data-view="overview" type="button">
             <span aria-hidden="true">⌂</span>
-            Overview
+            总览
           </button>
           <button class="nav-item" data-view="pipeline" type="button">
             <span aria-hidden="true">▤</span>
-            Pipeline
+            流程
           </button>
           <button class="nav-item" data-view="applications" type="button">
             <span aria-hidden="true">☰</span>
-            Applications
+            申请库
           </button>
         </nav>
 
         <div class="side-panel">
-          <p class="panel-label">This week</p>
-          <strong id="weekGoal">0 follow-ups</strong>
-          <span id="weekGoalMeta">No urgent actions yet</span>
+          <p class="panel-label">本周</p>
+          <strong id="weekGoal">0 个跟进</strong>
+          <span id="weekGoalMeta">暂无紧急事项</span>
         </div>
       </aside>
 
       <main class="workspace">
         <header class="topbar">
           <div>
-            <p class="eyebrow">Career command center</p>
-            <h2>Turn scattered internship applications into a clear pipeline.</h2>
+            <p class="eyebrow">求职工作台</p>
+            <h2>把分散的实习申请整理成清晰的申请流程。</h2>
           </div>
           <div class="topbar-actions">
-            <button class="icon-button" id="seedButton" type="button" title="Load sample data" aria-label="Load sample data">↻</button>
-            <button class="secondary-button" id="exportButton" type="button">Export CSV</button>
-            <button class="primary-button" id="openAddDialog" type="button">Add application</button>
+            <button class="icon-button" id="seedButton" type="button" title="重置演示数据" aria-label="重置演示数据">↻</button>
+            <button class="secondary-button" id="openJdDialog" type="button">导入 JD</button>
+            <button class="secondary-button" id="exportButton" type="button">导出 CSV</button>
+            <button class="primary-button" id="openAddDialog" type="button">新增申请</button>
           </div>
         </header>
 
-        <section class="metrics" aria-label="Pipeline summary">
+        <section class="metrics" aria-label="申请流程摘要">
           <article class="metric-card">
-            <span>Total</span>
+            <span>总申请</span>
             <strong id="totalCount">0</strong>
-            <small>tracked roles</small>
+            <small>已追踪岗位</small>
           </article>
           <article class="metric-card">
-            <span>Active</span>
+            <span>进行中</span>
             <strong id="activeCount">0</strong>
-            <small>still moving</small>
+            <small>仍需推进</small>
           </article>
           <article class="metric-card">
-            <span>Interviews</span>
+            <span>面试中</span>
             <strong id="interviewCount">0</strong>
-            <small>scheduled or live</small>
+            <small>已进入面试</small>
           </article>
           <article class="metric-card">
-            <span>Next 7 days</span>
+            <span>7 天内</span>
             <strong id="deadlineCount">0</strong>
-            <small>deadlines</small>
+            <small>即将截止</small>
           </article>
         </section>
 
-        <section class="control-strip" aria-label="Filters">
+        <section class="control-strip" aria-label="筛选条件">
           <label class="search-field">
-            <span>Search</span>
-            <input id="searchInput" type="search" placeholder="Company, role, location">
+            <span>搜索</span>
+            <input id="searchInput" type="search" placeholder="公司、岗位、地点">
           </label>
           <label>
-            <span>Status</span>
+            <span>状态</span>
             <select id="statusFilter">
-              <option value="all">All statuses</option>
-              <option value="Wishlist">Wishlist</option>
-              <option value="Applied">Applied</option>
-              <option value="Interview">Interview</option>
-              <option value="Offer">Offer</option>
-              <option value="Rejected">Rejected</option>
+              <option value="all">全部状态</option>
+              <option value="Wishlist">想申请</option>
+              <option value="Applied">已申请</option>
+              <option value="Interview">面试中</option>
+              <option value="Offer">已拿 Offer</option>
+              <option value="Rejected">已拒绝</option>
             </select>
           </label>
           <label>
-            <span>Priority</span>
+            <span>优先级</span>
             <select id="priorityFilter">
-              <option value="all">All priorities</option>
-              <option value="High">High</option>
-              <option value="Medium">Medium</option>
-              <option value="Low">Low</option>
+              <option value="all">全部优先级</option>
+              <option value="High">高</option>
+              <option value="Medium">中</option>
+              <option value="Low">低</option>
             </select>
           </label>
-          <button class="secondary-button" id="clearFilters" type="button">Clear</button>
+          <button class="secondary-button" id="clearFilters" type="button">清空</button>
         </section>
 
         <section class="view active" id="overviewView" aria-labelledby="overviewTitle">
           <div class="section-heading">
             <div>
-              <p class="eyebrow">Today</p>
-              <h3 id="overviewTitle">Focus queue</h3>
+              <p class="eyebrow">今天</p>
+              <h3 id="overviewTitle">优先处理</h3>
             </div>
           </div>
           <div class="overview-grid">
             <div class="focus-list" id="focusList"></div>
             <div class="insight-panel">
               <div class="chart-header">
-                <h3>Pipeline health</h3>
+                <h3>Pipeline 健康度</h3>
                 <span id="pipelineScore">0%</span>
               </div>
               <div class="progress-track" aria-hidden="true">
                 <div id="pipelineBar"></div>
               </div>
-              <p id="pipelineAdvice">Add applications to start measuring your internship pipeline.</p>
+              <p id="pipelineAdvice">添加申请后，这里会显示你的申请流程健康度。</p>
             </div>
           </div>
         </section>
@@ -134,8 +135,8 @@
         <section class="view" id="pipelineView" aria-labelledby="pipelineTitle">
           <div class="section-heading">
             <div>
-              <p class="eyebrow">Board</p>
-              <h3 id="pipelineTitle">Application stages</h3>
+              <p class="eyebrow">看板</p>
+              <h3 id="pipelineTitle">申请阶段</h3>
             </div>
           </div>
           <div class="kanban" id="kanbanBoard"></div>
@@ -144,19 +145,19 @@
         <section class="view" id="applicationsView" aria-labelledby="applicationsTitle">
           <div class="section-heading">
             <div>
-              <p class="eyebrow">Database</p>
-              <h3 id="applicationsTitle">All applications</h3>
+              <p class="eyebrow">数据库</p>
+              <h3 id="applicationsTitle">全部申请</h3>
             </div>
           </div>
           <div class="table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>Company</th>
-                  <th>Role</th>
-                  <th>Status</th>
-                  <th>Deadline</th>
-                  <th>Priority</th>
+                  <th>公司</th>
+                  <th>岗位</th>
+                  <th>状态</th>
+                  <th>截止日期</th>
+                  <th>优先级</th>
                   <th></th>
                 </tr>
               </thead>
@@ -171,67 +172,120 @@
       <form method="dialog" id="applicationForm">
         <div class="dialog-header">
           <div>
-            <p class="eyebrow">Application</p>
-            <h3 id="dialogTitle">Add application</h3>
+            <p class="eyebrow">申请记录</p>
+            <h3 id="dialogTitle">新增申请</h3>
           </div>
-          <button class="icon-button" value="cancel" type="button" id="closeDialog" aria-label="Close">×</button>
+          <button class="icon-button" value="cancel" type="button" id="closeDialog" aria-label="关闭">×</button>
         </div>
 
         <input type="hidden" id="applicationId">
         <div class="form-grid">
           <label>
-            <span>Company</span>
-            <input id="companyInput" required placeholder="Stripe">
+            <span>公司</span>
+            <input id="companyInput" required placeholder="例如：Stripe">
           </label>
           <label>
-            <span>Role</span>
-            <input id="roleInput" required placeholder="Product Design Intern">
+            <span>岗位</span>
+            <input id="roleInput" required placeholder="例如：产品设计实习生">
           </label>
           <label>
-            <span>Status</span>
+            <span>状态</span>
             <select id="statusInput">
-              <option>Wishlist</option>
-              <option>Applied</option>
-              <option>Interview</option>
-              <option>Offer</option>
-              <option>Rejected</option>
+              <option value="Wishlist">想申请</option>
+              <option value="Applied">已申请</option>
+              <option value="Interview">面试中</option>
+              <option value="Offer">已拿 Offer</option>
+              <option value="Rejected">已拒绝</option>
             </select>
           </label>
           <label>
-            <span>Priority</span>
+            <span>优先级</span>
             <select id="priorityInput">
-              <option>High</option>
-              <option>Medium</option>
-              <option>Low</option>
+              <option value="High">高</option>
+              <option value="Medium">中</option>
+              <option value="Low">低</option>
             </select>
           </label>
           <label>
-            <span>Deadline</span>
+            <span>截止日期</span>
             <input id="deadlineInput" type="date">
           </label>
           <label>
-            <span>Location</span>
-            <input id="locationInput" placeholder="London / Remote">
+            <span>地点</span>
+            <input id="locationInput" placeholder="伦敦 / 远程">
           </label>
           <label class="wide">
-            <span>Next action</span>
-            <input id="nextActionInput" placeholder="Email recruiter, polish cover letter">
+            <span>下一步行动</span>
+            <input id="nextActionInput" placeholder="联系 recruiter、修改简历、准备面试">
           </label>
           <label class="wide">
-            <span>Notes</span>
-            <textarea id="notesInput" rows="4" placeholder="Interview prep, referral context, links"></textarea>
+            <span>备注</span>
+            <textarea id="notesInput" rows="4" placeholder="JD 摘要、面试准备、内推信息或链接"></textarea>
           </label>
         </div>
 
         <div class="dialog-actions">
-          <button class="secondary-button danger" id="deleteButton" type="button">Delete</button>
+          <button class="secondary-button danger" id="deleteButton" type="button">删除</button>
           <span></span>
-          <button class="secondary-button" id="cancelButton" type="button">Cancel</button>
-          <button class="primary-button" type="submit">Save</button>
+          <button class="secondary-button" id="cancelButton" type="button">取消</button>
+          <button class="primary-button" type="submit">保存</button>
         </div>
       </form>
     </dialog>
 
+    <dialog id="jdDialog">
+      <form method="dialog" id="jdForm">
+        <div class="dialog-header">
+          <div>
+            <p class="eyebrow">JD 导入</p>
+            <h3>从照片或 PDF 读取岗位描述</h3>
+          </div>
+          <button class="icon-button" value="cancel" type="button" id="closeJdDialog" aria-label="关闭">×</button>
+        </div>
+
+        <div class="upload-panel">
+          <label class="file-drop">
+            <span>上传 JD 文件</span>
+            <input id="jdFileInput" type="file" accept="application/pdf,image/*,.txt,.md">
+            <small>支持 PDF、截图、照片、TXT 和 Markdown。图片会在浏览器里 OCR，不会上传到服务器。</small>
+          </label>
+          <p class="status-line" id="jdStatus">选择文件后开始读取 JD。</p>
+        </div>
+
+        <div class="form-grid">
+          <label>
+            <span>识别公司</span>
+            <input id="parsedCompany" placeholder="自动识别后可修改">
+          </label>
+          <label>
+            <span>识别岗位</span>
+            <input id="parsedRole" placeholder="自动识别后可修改">
+          </label>
+          <label>
+            <span>识别地点</span>
+            <input id="parsedLocation" placeholder="自动识别后可修改">
+          </label>
+          <label>
+            <span>识别截止日期</span>
+            <input id="parsedDeadline" type="date">
+          </label>
+          <label class="wide">
+            <span>读取到的 JD 文本</span>
+            <textarea id="jdText" rows="9" placeholder="文件内容会出现在这里，也可以直接粘贴 JD 文本。"></textarea>
+          </label>
+        </div>
+
+        <div class="dialog-actions">
+          <button class="secondary-button" id="parseJdText" type="button">重新解析文本</button>
+          <span></span>
+          <button class="secondary-button" id="cancelJdButton" type="button">取消</button>
+          <button class="primary-button" id="useJdButton" type="button">应用到申请表</button>
+        </div>
+      </form>
+    </dialog>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
     <script src="app.js"></script>
   </body>
 </html>
