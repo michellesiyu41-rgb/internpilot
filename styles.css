@@ -569,12 +569,14 @@ form {
 
 .dialog-actions {
   display: grid;
-  grid-template-columns: auto 1fr auto auto;
+  grid-template-columns: repeat(3, auto) 1fr auto auto;
+  gap: 10px;
   margin-top: 20px;
 }
 
 .upload-panel {
   display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   margin-bottom: 16px;
 }
@@ -597,6 +599,7 @@ form {
 }
 
 .status-line {
+  grid-column: 1 / -1;
   min-height: 34px;
   padding: 8px 10px;
   color: #214a53;
@@ -610,6 +613,50 @@ form {
   color: var(--danger);
   background: #fff0ee;
   border-color: #f1bbb2;
+}
+
+.analysis-panel {
+  display: grid;
+  gap: 14px;
+  margin-top: 16px;
+  padding: 16px;
+  background: #f7fafb;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+}
+
+.analysis-panel h4 {
+  margin: 0 0 6px;
+  font-size: 0.98rem;
+}
+
+.analysis-panel p,
+.analysis-panel ul {
+  margin: 0;
+  color: var(--muted);
+}
+
+.analysis-panel ul {
+  padding-left: 20px;
+}
+
+.analysis-score {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.analysis-score span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.analysis-score strong {
+  color: var(--accent);
+  font-size: 1.8rem;
 }
 
 @media (max-width: 980px) {
@@ -669,7 +716,12 @@ form {
   .metrics,
   .control-strip,
   .form-grid,
+  .upload-panel,
   .nav {
+    grid-template-columns: 1fr;
+  }
+
+  .dialog-actions {
     grid-template-columns: 1fr;
   }
 
