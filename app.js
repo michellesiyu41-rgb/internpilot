@@ -114,10 +114,18 @@ const elements = {
   closeJdDialog: document.querySelector("#closeJdDialog"),
   cancelJdButton: document.querySelector("#cancelJdButton"),
   jdFileInput: document.querySelector("#jdFileInput"),
+  resumeFileInput: document.querySelector("#resumeFileInput"),
   jdStatus: document.querySelector("#jdStatus"),
   jdText: document.querySelector("#jdText"),
+  resumeText: document.querySelector("#resumeText"),
   parseJdText: document.querySelector("#parseJdText"),
+  analyzeFitButton: document.querySelector("#analyzeFitButton"),
+  copyEmailButton: document.querySelector("#copyEmailButton"),
   useJdButton: document.querySelector("#useJdButton"),
+  matchScore: document.querySelector("#matchScore"),
+  matchDetails: document.querySelector("#matchDetails"),
+  suggestionsList: document.querySelector("#suggestionsList"),
+  emailDraft: document.querySelector("#emailDraft"),
   parsedCompany: document.querySelector("#parsedCompany"),
   parsedRole: document.querySelector("#parsedRole"),
   parsedLocation: document.querySelector("#parsedLocation"),
@@ -174,8 +182,11 @@ elements.openJdDialog.addEventListener("click", openJdDialog);
 elements.closeJdDialog.addEventListener("click", () => elements.jdDialog.close());
 elements.cancelJdButton.addEventListener("click", () => elements.jdDialog.close());
 elements.parseJdText.addEventListener("click", () => parseAndFillJd(elements.jdText.value));
+elements.analyzeFitButton.addEventListener("click", analyzeFitFromMaterials);
+elements.copyEmailButton.addEventListener("click", copyEmailDraft);
 elements.useJdButton.addEventListener("click", applyJdToApplicationForm);
 elements.jdFileInput.addEventListener("change", handleJdFile);
+elements.resumeFileInput.addEventListener("change", handleResumeFile);
 
 elements.seedButton.addEventListener("click", () => {
   applications = sampleApplications.map((application) => ({
@@ -216,7 +227,12 @@ function readApplications() {
   if (stored) {
     try {
       const parsed = JSON.parse(stored);
-      return Array.isArray(parsed) ? parsed : sampleApplications;
+      if (!Array.isArray(parsed)) {
+        return sampleApplications;
+      }
+      const migrated = migrateLegacySamples(parsed);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(migrated));
+      return migrated;
     } catch {
       return sampleApplications;
     }
@@ -477,12 +493,18 @@ function saveApplication() {
 
 function openJdDialog() {
   elements.jdFileInput.value = "";
+  elements.resumeFileInput.value = "";
   elements.jdText.value = "";
+  elements.resumeText.value = "";
   elements.parsedCompany.value = "";
   elements.parsedRole.value = "";
   elements.parsedLocation.value = "";
   elements.parsedDeadline.value = "";
-  setJdStatus("选择文件后开始读取 JD。");
+  elements.matchScore.textContent = "尚未分析";
+  elements.matchDetails.textContent = "导入 JD 和简历/经历后，点击“分析匹配度”。";
+  elements.suggestionsList.innerHTML = "<li>先上传或粘贴材料。</li>";
+  elements.emailDraft.value = "";
+  setJdStatus("选择文件后开始读取，或直接粘贴 JD 和经历文本。");
   elements.jdDialog.showModal();
 }
 
@@ -500,6 +522,22 @@ async function handleJdFile(event) {
     setJdStatus("读取完成。请检查识别结果，再应用到申请表。");
   } catch (error) {
     setJdStatus(error.message || "读取失败，请直接粘贴 JD 文本。", true);
+  }
+}
+
+async function handleResumeFile(event) {
+  const file = event.target.files?.[0];
+  if (!file) {
+    return;
+  }
+
+  try {
+    setJdStatus(`正在读取简历/经历：${file.name}`);
+    const text = await extractTextFromFile(file);
+    elements.resumeText.value = normalizeWhitespace(text);
+    setJdStatus("简历/经历读取完成。可以继续分析匹配度。");
+  } catch (error) {
+    setJdStatus(error.message || "读取失败，请直接粘贴简历或经历文本。", true);
   }
 }
 
@@ -587,9 +625,150 @@ function parseJd(text) {
   };
 }
 
+function analyzeFitFromMaterials() {
+  const jdText = elements.jdText.value.trim();
+  const resumeText = elements.resumeText.value.trim();
+
+  if (!jdText || !resumeText) {
+    setJdStatus("请先提供 JD 和简历/过往经历，再分析匹配度。", true);
+    return;
+  }
+
+  parseAndFillJd(jdText);
+  const analysis = buildFitAnalysis(jdText, resumeText);
+  elements.matchScore.textContent = `${analysis.score}%`;
+  elements.matchDetails.textContent = analysis.details;
+  elements.suggestionsList.innerHTML = analysis.suggestions
+    .map((suggestion) => `<li>${escapeHtml(suggestion)}</li>`)
+    .join("");
+  elements.emailDraft.value = buildEmailDraft(analysis);
+  setJdStatus("匹配度、提升建议和投递邮件草稿已生成。");
+}
+
+function buildFitAnalysis(jdText, resumeText) {
+  const jdSkills = extractSkillKeywords(jdText);
+  const resumeSkills = extractSkillKeywords(resumeText);
+  const matchedSkills = jdSkills.filter((skill) => resumeSkills.includes(skill));
+  const missingSkills = jdSkills.filter((skill) => !resumeSkills.includes(skill));
+  const jdTokens = getImportantTokens(jdText);
+  const resumeTokens = getImportantTokens(resumeText);
+  const tokenMatches = jdTokens.filter((token) => resumeTokens.includes(token));
+  const skillScore = jdSkills.length ? matchedSkills.length / jdSkills.length : 0.45;
+  const tokenScore = jdTokens.length ? tokenMatches.length / jdTokens.length : 0.35;
+  const evidenceBonus = /(实习|intern|项目|project|lead|负责|built|developed|launched|分析|research|用户|data|api)/i.test(resumeText) ? 0.12 : 0;
+  const score = Math.min(95, Math.round((skillScore * 0.62 + tokenScore * 0.26 + evidenceBonus) * 100));
+  const parsed = parseJd(jdText);
+
+  return {
+    score,
+    company: elements.parsedCompany.value.trim() || parsed.company || "目标公司",
+    role: elements.parsedRole.value.trim() || parsed.role || "目标岗位",
+    matchedSkills,
+    missingSkills,
+    tokenMatches: tokenMatches.slice(0, 8),
+    suggestions: buildSuggestions(missingSkills, score),
+    details: buildMatchDetails(score, matchedSkills, missingSkills, tokenMatches)
+  };
+}
+
+function extractSkillKeywords(text) {
+  const skillMap = [
+    ["JavaScript", /javascript|typescript|react|vue|node|前端|网页|web/i],
+    ["Python", /python|pandas|numpy|flask|django/i],
+    ["数据分析", /data analysis|analytics|sql|tableau|power bi|数据分析|数据可视化|指标/i],
+    ["机器学习", /machine learning|ml|deep learning|pytorch|tensorflow|机器学习|深度学习|模型/i],
+    ["产品思维", /product|roadmap|user research|用户研究|产品|需求分析|增长/i],
+    ["设计能力", /\b(?:figma|ui|ux|prototype|wireframe)\b|设计|原型/i],
+    ["后端/API", /api|backend|server|database|postgres|mysql|后端|数据库/i],
+    ["沟通协作", /communication|stakeholder|collaborat|presentation|沟通|协作|跨团队/i],
+    ["项目管理", /project management|prioriti[sz]e|deadline|agile|scrum|项目管理|排期/i],
+    ["研究能力", /research|experiment|survey|interview|调研|实验|访谈/i],
+    ["市场/增长", /marketing|growth|seo|campaign|crm|市场|增长|投放/i],
+    ["金融/商业", /finance|business|strategy|market|商业|金融|策略/i]
+  ];
+
+  return skillMap
+    .filter(([, pattern]) => pattern.test(text))
+    .map(([label]) => label);
+}
+
+function getImportantTokens(text) {
+  const stopWords = new Set(["and", "the", "for", "with", "you", "our", "will", "are", "from", "this", "that", "工作", "岗位", "要求", "负责", "能力", "相关", "进行"]);
+  const tokens = normalizeWhitespace(text)
+    .toLowerCase()
+    .match(/[a-z][a-z+#.-]{2,}|[\u4e00-\u9fa5]{2,}/g) || [];
+  const counts = new Map();
+
+  tokens.forEach((token) => {
+    if (!stopWords.has(token) && token.length <= 24) {
+      counts.set(token, (counts.get(token) || 0) + 1);
+    }
+  });
+
+  return [...counts.entries()]
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 16)
+    .map(([token]) => token);
+}
+
+function buildMatchDetails(score, matchedSkills, missingSkills, tokenMatches) {
+  const matched = matchedSkills.length ? `已匹配：${matchedSkills.join("、")}。` : "暂未识别到明显技能匹配。";
+  const missing = missingSkills.length ? `待补强：${missingSkills.join("、")}。` : "JD 中的核心技能基本都有覆盖。";
+  const overlap = tokenMatches.length ? `关键词重合：${tokenMatches.slice(0, 6).join("、")}。` : "关键词重合度偏低。";
+  return `综合匹配度 ${score}%。${matched}${missing}${overlap}`;
+}
+
+function buildSuggestions(missingSkills, score) {
+  const suggestions = [];
+
+  if (missingSkills.length) {
+    suggestions.push(`优先补强 JD 中缺口最大的能力：${missingSkills.slice(0, 4).join("、")}。`);
+    suggestions.push("用一个 1-2 周的小项目补证据：明确目标、过程、结果和可量化指标。");
+  } else {
+    suggestions.push("当前经历和 JD 的技能要求较贴合，重点把项目结果写得更量化。");
+  }
+
+  if (score < 60) {
+    suggestions.push("投递前建议重写简历摘要，把最相关的课程、项目或实习放到最前面。");
+  } else if (score < 78) {
+    suggestions.push("在邮件里主动解释匹配点，并补一句你正在提升的能力。");
+  } else {
+    suggestions.push("可以把邮件写得更直接，突出 2 个最强匹配点并请求面试机会。");
+  }
+
+  suggestions.push("把 JD 关键词自然放进简历 bullet，但避免堆砌关键词。");
+  return suggestions;
+}
+
+function buildEmailDraft(analysis) {
+  const matched = analysis.matchedSkills.length
+    ? analysis.matchedSkills.slice(0, 3).join("、")
+    : "相关项目经历和学习能力";
+  const gap = analysis.missingSkills.length
+    ? `我也注意到岗位需要 ${analysis.missingSkills.slice(0, 2).join("、")}，目前正在通过项目练习继续补强。`
+    : "我的经历与岗位要求较为贴合，也希望进一步了解团队当前最重要的问题。";
+
+  return `邮件主题：申请 ${analysis.company} ${analysis.role}\n\n您好，\n\n我想申请 ${analysis.company} 的 ${analysis.role}。我对这个机会很感兴趣，因为岗位要求与我过往在 ${matched} 方面的经历有较高匹配度。\n\n根据 JD，我理解这个岗位需要候选人能够快速学习、主动推进任务，并把分析或项目结果转化为实际产出。我的相关经历可以支持这些要求：我有过项目拆解、协作交付和结果复盘的经验，也习惯用清晰的文档和数据说明工作成果。\n\n${gap}\n\n如果方便的话，希望能有机会进一步沟通我如何为团队贡献价值。附件中是我的简历，感谢您的时间。\n\n祝好，\n[你的名字]`;
+}
+
+async function copyEmailDraft() {
+  const text = elements.emailDraft.value.trim();
+  if (!text) {
+    setJdStatus("还没有可复制的邮件草稿，请先分析匹配度。", true);
+    return;
+  }
+
+  await navigator.clipboard.writeText(text);
+  setJdStatus("投递邮件已复制到剪贴板。");
+}
+
 function applyJdToApplicationForm() {
   const text = elements.jdText.value.trim();
+  const resumeText = elements.resumeText.value.trim();
+  const emailText = elements.emailDraft.value.trim();
   const jdSnippet = text ? `\n\nJD 原文摘录：\n${text.slice(0, 1800)}` : "";
+  const resumeSnippet = resumeText ? `\n\n简历/经历摘录：\n${resumeText.slice(0, 1200)}` : "";
+  const emailSnippet = emailText ? `\n\n投递邮件草稿：\n${emailText}` : "";
 
   elements.jdDialog.close();
   openDialog("", {
@@ -600,7 +779,7 @@ function applyJdToApplicationForm() {
     status: "Wishlist",
     priority: "Medium",
     nextAction: "根据 JD 调整简历并提交申请",
-    notes: `由 JD 导入生成。${jdSnippet}`.trim()
+    notes: `由投递助手生成。${jdSnippet}${resumeSnippet}${emailSnippet}`.trim()
   });
 }
 
